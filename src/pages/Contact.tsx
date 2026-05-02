@@ -1,51 +1,17 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Mail, MapPin, Clock, Send, CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/nexora/PageShell";
 
 const Contact = () => {
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const submitted = searchParams.get("success") === "1";
   const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name || !form.email || !form.message) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("https://formsubmit.co/ajax/nexorawebofficial@gmail.com", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          company: form.company,
-          message: form.message,
-          _subject: "New contact request from Nexoraweb",
-          _captcha: "false",
-          _template: "table",
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to send message. Please try again.");
-      }
-
-      setSubmitted(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to send message. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const nextUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/contact?success=1`
+      : "/contact?success=1";
+  const firstName = form.name ? form.name.split(" ")[0] : "there";
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -96,14 +62,30 @@ const Contact = () => {
               </div>
               <h2 className="font-display font-bold text-2xl mb-2">Message received</h2>
               <p className="text-muted-foreground">
-                Thanks {form.name.split(" ")[0]} — your message has been sent to nexorawebofficial@gmail.com and we&apos;ll be in touch shortly.
+                Thanks {firstName} — your message has been sent to nexorawebofficial@gmail.com and we&apos;ll be in touch shortly.
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form
+              action="https://formsubmit.co/nexorawebofficial@gmail.com"
+              method="POST"
+              className="space-y-5"
+            >
+              <input type="hidden" name="_subject" value="New contact request from Nexoraweb" />
+              <input type="hidden" name="_next" value={nextUrl} />
+              <input type="hidden" name="_captcha" value="false" />
+              <input type="hidden" name="_template" value="table" />
+
               <div className="grid sm:grid-cols-2 gap-5">
                 <Field label="Name" name="name" value={form.name} onChange={handleChange} required />
-                <Field label="Email" name="email" type="email" value={form.email} onChange={handleChange} required />
+                <Field
+                  label="Email"
+                  name="_replyto"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <Field label="Company" name="company" value={form.company} onChange={handleChange} />
               <div>
@@ -120,13 +102,8 @@ const Contact = () => {
                   placeholder="Tell us what you're building, your timeline, and any constraints…"
                 />
               </div>
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              <button
-                type="submit"
-                disabled={loading || !form.name || !form.email || !form.message}
-                className="btn-primary-glow inline-flex items-center gap-2"
-              >
-                {loading ? "Sending..." : "Send message"} <Send size={16} />
+              <button type="submit" className="btn-primary-glow inline-flex items-center gap-2">
+                Send message <Send size={16} />
               </button>
             </form>
           )}
