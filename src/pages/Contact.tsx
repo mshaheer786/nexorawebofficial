@@ -6,7 +6,7 @@ import { PageShell } from "@/components/nexora/PageShell";
 const Contact = () => {
   const [searchParams] = useSearchParams();
   const submitted = searchParams.get("success") === "1";
-  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", message: "", service: "" });
   const nextUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/contact?success=1`
@@ -75,19 +75,37 @@ const Contact = () => {
               <input type="hidden" name="_next" value={nextUrl} />
               <input type="hidden" name="_captcha" value="false" />
               <input type="hidden" name="_template" value="table" />
+              <input type="hidden" name="_replyto" value={form.email} />
 
               <div className="grid sm:grid-cols-2 gap-5">
                 <Field label="Name" name="name" value={form.name} onChange={handleChange} required />
                 <Field
                   label="Email"
-                  name="_replyto"
+                  name="email"
                   type="email"
                   value={form.email}
                   onChange={handleChange}
                   required
                 />
               </div>
-              <Field label="Company" name="company" value={form.company} onChange={handleChange} />
+              <div>
+                <label className="block text-sm font-medium mb-2 text-muted-foreground">
+                  Service *
+                </label>
+                <select
+                  name="service"
+                  value={form.service}
+                  onChange={(e) => setForm({ ...form, service: e.target.value })}
+                  required
+                  className="w-full bg-muted/50 border border-border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition"
+                >
+                  <option value="">Select the service</option>
+                  <option value="AI Chatbots">AI Chatbots</option>
+                  <option value="SEO Dominance">SEO Dominance</option>
+                  <option value="Custom C++ Engines">Custom C++ Engines</option>
+                  <option value="Social Growth">Social Growth</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">
                   Project details *
