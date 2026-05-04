@@ -1,17 +1,42 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { Mail, MapPin, Clock, Send, CheckCircle2 } from "lucide-react";
 import { PageShell } from "@/components/nexora/PageShell";
 
 const Contact = () => {
-  const [searchParams] = useSearchParams();
-  const submitted = searchParams.get("success") === "1";
-  const [form, setForm] = useState({ name: "", email: "", message: "", service: "" });
-  const nextUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/contact?success=1`
-      : "/contact?success=1";
-  const firstName = form.name ? form.name.split(" ")[0] : "there";
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.email || !form.message) return;
+
+    setLoading(true);
+    
+    // Submit directly to FormSubmit endpoint
+    const formData = new FormData();
+    formData.append("name", form.name);
+    formData.append("email", form.email);
+    formData.append("company", form.company);
+    formData.append("message", form.message);
+    formData.append("_subject", "New contact request from Nexoraweb");
+    formData.append("_captcha", "false");
+
+    fetch("https://formsubmit.co/nexorawebofficial@gmail.com", {
+      method: "POST",
+      body: formData,
+    })
+      .then(() => {
+        setSubmitted(true);
+        setForm({ name: "", email: "", company: "", message: "" });
+      })
+      .catch(() => {
+        alert("Failed to send message. Please try again.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -60,23 +85,13 @@ const Contact = () => {
               <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-secondary/10 border border-secondary/30 mb-5">
                 <CheckCircle2 size={30} className="text-secondary" />
               </div>
-              <h2 className="font-display font-bold text-2xl mb-2">Message received</h2>
+              <h2 className="font-display font-bold text-2xl mb-2">Message received!</h2>
               <p className="text-muted-foreground">
-                Thanks {firstName} — your message has been sent to nexorawebofficial@gmail.com and we&apos;ll be in touch shortly.
+                Thanks for reaching out. We've received your message and will respond within 4 hours.
               </p>
             </div>
           ) : (
-            <form
-              action="https://formsubmit.co/nexorawebofficial@gmail.com"
-              method="POST"
-              className="space-y-5"
-            >
-              <input type="hidden" name="_subject" value="New contact request from Nexoraweb" />
-              <input type="hidden" name="_next" value={nextUrl} />
-              <input type="hidden" name="_captcha" value="false" />
-              <input type="hidden" name="_template" value="table" />
-              <input type="hidden" name="_replyto" value={form.email} />
-
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid sm:grid-cols-2 gap-5">
                 <Field label="Name" name="name" value={form.name} onChange={handleChange} required />
                 <Field
@@ -88,24 +103,7 @@ const Contact = () => {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-muted-foreground">
-                  Service *
-                </label>
-                <select
-                  name="service"
-                  value={form.service}
-                  onChange={(e) => setForm({ ...form, service: e.target.value })}
-                  required
-                  className="w-full bg-muted/50 border border-border rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition"
-                >
-                  <option value="">Select the service</option>
-                  <option value="AI Chatbots">AI Chatbots</option>
-                  <option value="SEO Dominance">SEO Dominance</option>
-                  <option value="Custom C++ Engines">Custom C++ Engines</option>
-                  <option value="Social Growth">Social Growth</option>
-                </select>
-              </div>
+              <Field label="Company" name="company" value={form.company} onChange={handleChange} />
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">
                   Project details *
@@ -120,8 +118,12 @@ const Contact = () => {
                   placeholder="Tell us what you're building, your timeline, and any constraints…"
                 />
               </div>
-              <button type="submit" className="btn-primary-glow inline-flex items-center gap-2">
-                Send message <Send size={16} />
+              <button
+                type="submit"
+                disabled={loading || !form.name || !form.email || !form.message}
+                className="btn-primary-glow inline-flex items-center gap-2"
+              >
+                {loading ? "Sending..." : "Send message"} <Send size={16} />
               </button>
             </form>
           )}
