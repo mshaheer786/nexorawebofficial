@@ -5,11 +5,11 @@ import { PageShell } from "@/components/nexora/PageShell";
 const Contact = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", company: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", service: "", message: "" });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.message) return;
+    if (!form.name || !form.email || !form.service || !form.message) return;
 
     setLoading(true);
     
@@ -17,7 +17,7 @@ const Contact = () => {
     const formData = new FormData();
     formData.append("name", form.name);
     formData.append("email", form.email);
-    formData.append("company", form.company);
+    formData.append("service", form.service);
     formData.append("message", form.message);
     formData.append("_subject", "New contact request from Nexoraweb");
     formData.append("_captcha", "false");
@@ -28,7 +28,7 @@ const Contact = () => {
     })
       .then(() => {
         setSubmitted(true);
-        setForm({ name: "", email: "", company: "", message: "" });
+        setForm({ name: "", email: "", service: "", message: "" });
       })
       .catch(() => {
         alert("Failed to send message. Please try again.");
@@ -38,7 +38,7 @@ const Contact = () => {
       });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   return (
@@ -103,7 +103,25 @@ const Contact = () => {
                   required
                 />
               </div>
-              <Field label="Company" name="company" value={form.company} onChange={handleChange} />
+              <div>
+                <label className="block text-sm font-medium mb-2 text-muted-foreground">
+                  Select Service *
+                </label>
+                <select
+                  name="service"
+                  value={form.service}
+                  onChange={handleChange}
+                  required
+                  className="w-full bg-muted/50 border border-border rounded-full px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/30 transition"
+                >
+                  <option value="">Choose a service...</option>
+                  <option value="AI Chatbots">AI Chatbots</option>
+                  <option value="SEO Dominance">SEO Dominance</option>
+                  <option value="Custom C++ Engines">Custom C++ Engines</option>
+                  <option value="Social Growth">Social Growth</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-muted-foreground">
                   Project details *
@@ -120,7 +138,7 @@ const Contact = () => {
               </div>
               <button
                 type="submit"
-                disabled={loading || !form.name || !form.email || !form.message}
+                disabled={loading || !form.name || !form.email || !form.service || !form.message}
                 className="btn-primary-glow inline-flex items-center gap-2"
               >
                 {loading ? "Sending..." : "Send message"} <Send size={16} />
